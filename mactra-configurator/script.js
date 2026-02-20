@@ -278,12 +278,13 @@ KEYMAP_DATAS[12].keydata_default = 0x69;
 KEYMAP_DATAS[13].keydata_default = MACTRA_CONSUMER_FLAG | 0xB3;
 KEYMAP_DATAS[14].keydata_default = 0x7F;
 
-KEYMAP_DATAS[5].keydata = MACTRA_CONSUMER_FLAG | 0x70;
+//KEYMAP_DATAS[5].keydata = MACTRA_CONSUMER_FLAG | 0x70;
 
 // set default label with KEYMAP_DATAS;
+
 KEY_LAYOUT.forEach(k => {
 	// console.log(k.label);
-	KEYMAP_DATAS[k.id].keydata =  KEYMAP_DATAS[k.id].keydata_default;
+	//KEYMAP_DATAS[k.id].keydata =  KEYMAP_DATAS[k.id].keydata_default;
 	k.label = getKeyLabel(KEYMAP_DATAS[k.id].keydata);
 });
 
