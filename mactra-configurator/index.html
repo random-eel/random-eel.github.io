@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mactra Keyboard Configurator</title>
+	<link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <div id="toolbar">
+        <button id="btn-connect" class="primary">Connect Keyboard</button>
+        <button id="btn-read" disabled>Reload Layout</button>
+        <button id="btn-write" disabled>Apply</button>
+        <div style="width: 1px; background: #444; margin: 0 10px;"></div>
+        <span id="status-text" style="align-self: center; color: #888;">Disconnected</span>
+    </div>
+
+	<div id="stage-container">
+		<svg id="keyboard-svg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
+			
+			<image href="keyboard.svg" x="0" y="0" width="600" height="400" />
+
+			<g id="keys-layer"></g>
+			
+		</svg>
+	</div>
+	
+	<div id="led-toolbar">
+
+		<div class="led-group" style="margin-left: auto;">
+			<label>ANIMATION</label>
+			<select id="led-mode-select">
+				<option value="0">Off</option>
+				<option value="1">Rainbow Wave</option>
+				<option value="2">Breathing</option>
+				<option value="3">Static</option>
+			</select>
+		</div>
+
+		<div class="led-group">
+			<label>BRIGHTNESS: <span id="bright-val">26%</span></label>
+			<input type="range" id="led-brightness" min="0" max="32" value="8">
+		</div>
+
+		<div class="led-group">
+			<label>SPEED (ms)</label>
+			<select id="led-refresh-select">
+				</select>
+		</div>
+
+		<div class="led-group" style="flex-direction: row; gap: 15px;">
+			<div style="display: flex; flex-direction: column; gap: 5px;">
+				<label>COLOR</label>
+				<input type="color" id="led-color-1" value="#007bff">
+			</div>
+			<div style="display: flex; flex-direction: column; gap: 5px;">
+				<label>COLOR 2</label>
+				<input type="color" id="led-color-2" value="#33ccff">
+			</div>
+		</div>
+
+		<div class="led-group" style="margin-right: auto;">
+			<button id="btn-apply-led" class="primary">Apply LEDs</button>
+		</div>
+
+	</div>
+
+    <div id="modal-overlay">
+		<div id="picker-modal">
+			<h2 style="margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px;">
+				Edit Key <span id="target-key-id" style="color: var(--accent-color)">#0</span>
+			</h2>
+
+			<div style="display: flex; gap: 20px; height: 300px;">
+				
+				<div style="flex: 1; border-right: 1px solid #444; padding-right: 15px;">
+					<label style="color: #888; font-size: 12px; font-weight: bold;">BASE KEYCODE</label>
+					<div class="picker-grid" id="picker-grid">
+						</div>
+				</div>
+
+				<div style="width: 150px; display: flex; flex-direction: column; gap: 10px;">
+					<label style="color: #888; font-size: 12px; font-weight: bold;">MODIFIERS</label>
+					
+					<label class="flag-row">
+						<input type="checkbox" id="flag-ctrl"> <span>Left Ctrl</span>
+					</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-shift"> <span>Left Shift</span>
+					</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-alt"> <span>Left Alt</span>
+					</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-gui"> <span>Left Win/Cmd</span>
+					</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-ctrl-right"> <span>Right Ctrl</span>
+					</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-shift-right"> <span>Right Shift</span>
+					</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-alt-right"> <span>Right Alt</span>
+					</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-gui-right"> <span>Right Win/Cmd</span>
+					</label>
+					
+					<!--
+					<div style="height: 1px; background: #444; margin: 4px 0;"></div>
+					-->
+					<label style="color: #888; font-size: 12px; font-weight: bold;">BEHAVIOR</label>
+					<label class="flag-row">
+						<input type="checkbox" id="flag-consumer"> <span>Consumer (Hex)</span>
+					</label>
+
+					<div style="margin-left: 28px; margin-top: 5px;">
+						<input type="text" id="consumer-hex-input" placeholder="e.g. E9 (Vol+)" disabled
+							   style="width: 110px; padding: 6px; background: #222; color: #ff9800; border: 1px solid #555; border-radius: 4px; font-family: monospace;">
+					</div>
+
+					<label class="flag-row">
+						<input type="checkbox" id="flag-toggle"> <span>Toggle Key</span>
+					</label>
+
+										
+					<!--div style="flex-grow: 1;"></!div-->
+					
+					<div style="background: #333; padding: 10px; border-radius: 4px; text-align: center;">
+						<span id="preview-text" style="font-weight: bold; font-size: 18px;">A</span>
+					</div>
+
+					<button id="btn-confirm-remap" class="primary">Confirm</button>
+					<button onclick="closeModal()" style="background: transparent; border: 1px solid #555;">Cancel</button>
+				</div>
+			</div>
+		</div>	
+    </div>
+
+	<script src="script.js"></script>
+
+</body>
+</html>

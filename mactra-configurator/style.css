@@ -1,0 +1,219 @@
+@charset "UTF-8";
+        :root {
+            --bg-color: #1a1a1a;
+            --key-color: #2d2d2d;
+            --key-border: #444;
+            --accent-color: #007bff;
+            --text-color: #eee;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling, let canvas zoom */
+        }
+
+        /* --- Toolbar --- */
+        #toolbar {
+            width: 100%;
+            padding: 15px;
+            background: #252525;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            border-bottom: 1px solid #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover { background: #444; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.primary { background: var(--accent-color); border-color: #0056b3; }
+		
+		button.unsaved-changes {
+			background-color: #ff9800 !important; /* Warning Orange */
+			border-color: #e68a00 !important;
+			color: #fff !important;
+			animation: pulse-orange 1.5s infinite; /* Make it throb slightly */
+		}
+
+		/* Optional: The glowing animation */
+		@keyframes pulse-orange {
+			0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+			70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+			100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+		}
+        
+        /* --- The Keyboard Stage (SVG) --- */
+        #stage-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 20px 20px; /* Grid pattern */
+            overflow: hidden;
+        }
+
+        svg {
+            max-width: 90%;
+            max-height: 80%;
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+            transition: transform 0.1s;
+        }
+
+        /* SVG Key Styles */
+
+		.key-shape {
+			fill: rgba(0, 0, 0, 0.75); ;       /* Invisible by default so we see your SVG */
+			stroke: rgba(255, 255, 255, 0.5);     /* No border */
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+
+		/* When hovering, show a subtle glow over the artwork */
+		.key-shape:hover { 
+			fill: rgba(255, 255, 255, 0.2); 
+			stroke: rgba(255, 255, 255, 0.5);
+		}
+
+		/* When active/selected, light it up blue */
+		.key-shape.active { 
+			fill: rgba(0, 123, 255, 0.4); 
+			stroke: #007bff; 
+			stroke-width: 2px;
+		}
+		
+		.key-shape.unsaved {
+			fill: rgba(0, 0, 0, 0.75);
+			stroke: #ff9800;     /* Orange Border */
+			cursor: pointer;
+			transition: all 0.2s;
+			animation: pulse-orange 1.5s infinite; /* Make it throb slightly */
+		}
+
+        /* --- Modal (Key Picker) --- */
+        #modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(3px);
+        }
+
+        #picker-modal {
+            background: #252525;
+            width: 500px;
+			height: 600px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .picker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+            max-height: 480px;
+			overflow-x: clip;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .picker-key {
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .picker-key:hover { background: var(--accent-color); }
+
+        /* --- LED Color Picker --- */
+        #led-panel {
+            position: absolute;
+            right: 20px;
+            top: 80px;
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        input[type="color"] { border: none; width: 40px; height: 40px; cursor: pointer; }
+		
+		/* Styling for the flags */
+		.flag-row { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+		.flag-row input { transform: scale(1.2); }
+		.flag-row:hover { color: var(--accent-color); }
+
+#led-toolbar {
+    width: 100%;
+    padding: 15px 25px;
+    background: #252525;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    border-top: 1px solid #333;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.5); /* Shadow pointing up */
+    z-index: 10;
+    box-sizing: border-box;
+    margin-top: auto; /* Pushes it to the bottom of the flex container */
+}
+
+.led-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.led-group label {
+    color: #888;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Style the inputs to match the dark theme */
+.led-group select, 
+.led-group input[type="range"] {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 6px;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* Make color pickers look like clean squares */
+.led-group input[type="color"] {
+    border: 1px solid #555;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+    background: transparent;
+}
