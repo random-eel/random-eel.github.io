@@ -909,9 +909,11 @@ async function hid_request_keymaps() {
 			// Note: receiveFeatureReport returns a DataView
 			const dataView = await device.receiveFeatureReport(REPORT_ID);
 			const data = new Uint8Array(dataView.buffer);
-			console.log("Data received.");
+			console.log("Data received. -----------------------------------");
+			console.log(data);
 			packets[i] = process_received_packet(data);
-			
+			console.log("Processed: -----------------------------------");
+			console.log(packets[i]);
 			// console.log(toHex(data[7]) + " " + toHex(data[6]) + " " + toHex(data[5]) + " " + toHex(data[4]) );
 		}
 		console.log("Keymap Read Complete.");
