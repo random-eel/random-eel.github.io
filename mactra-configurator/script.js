@@ -676,6 +676,8 @@ function updateKeyIndicators(keyId) {
 
 function refreshKeymap(pkt) {
 	if (!pkt) return;
+	console.log("Packet: -------------------------------------------------------------------");
+	console.log(pkt);
 	console.log("Refreshing keymap...");
 	KEY_LAYOUT.forEach(k => {
 		KEYMAP_DATAS[k.id].keydata = pkt[k.id][1];
