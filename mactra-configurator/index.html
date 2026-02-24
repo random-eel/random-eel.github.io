@@ -13,7 +13,10 @@
         <button id="btn-write" disabled>Apply</button>
         <div style="width: 1px; background: #444; margin: 0 10px;"></div>
         <span id="status-text" style="align-self: center; color: #888;">Disconnected</span>
-    </div>
+        <div style="width: 1px; background: #444; margin: 0 10px;"></div>
+		<button id="btn-revert-changes" style="display: none;">Revert Changes</button>
+		<button id="btn-load-default" style="display: none;">Load Default</button>
+	</div>
 
 	<div id="stage-container">
 		<svg id="keyboard-svg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet">
@@ -39,7 +42,7 @@
 
 		<div class="led-group">
 			<label>BRIGHTNESS: <span id="bright-val">26%</span></label>
-			<input type="range" id="led-brightness" min="0" max="31" value="8">
+			<input type="range" id="led-brightness" min="0" max="32" value="8">
 		</div>
 
 		<div class="led-group">
