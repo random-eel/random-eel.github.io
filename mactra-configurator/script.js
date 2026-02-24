@@ -290,7 +290,7 @@ function set_debug_data() {
 	});
 }
 
-set_debug_data();
+// set_debug_data();
 
 KEY_LAYOUT.forEach(k => {
 	// console.log(k.label);
@@ -842,7 +842,7 @@ async function hid_request_configs() {
 			// Note: receiveFeatureReport returns a DataView
 			const dataView = await device.receiveFeatureReport(REPORT_ID);
 			const data = new Uint8Array(dataView.buffer);
-			
+			console.log(data);
 			config_packets.push(data);
 			// console.log(config_packets);
 		}
@@ -1141,7 +1141,7 @@ document.getElementById('btn-revert-changes').addEventListener('click', async ()
 	await hid_request_configs();
 });
 
-document.getElementById('led-mode-select').addEventListener('change', (event) => {
+document.getElementById('led-mode-select').addEventListener('change', async (event) => {
 	// 1. Get the newly selected value
 	const newValue = event.target.value;
 	console.log("LED Mode changed to:", newValue);
@@ -1150,7 +1150,7 @@ document.getElementById('led-mode-select').addEventListener('change', (event) =>
 	hid_send_config(1);
 });
 
-document.getElementById('led-refresh-select').addEventListener('change', (event) => {
+document.getElementById('led-refresh-select').addEventListener('change', async (event) => {
 	// 1. Get the newly selected value
 	const newValue = event.target.value;
 	console.log("LED Refresh changed to: " + (20 + newValue*5) + "Hz" );
