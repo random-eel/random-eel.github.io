@@ -1,2 +1,5 @@
 # random-eel.github.io
-Random Github.io page
+Work in progess!  
+
+### Mactra Configurator
+[Click here!](https://random-eel.github.io/mactra-configurator/index.html)
