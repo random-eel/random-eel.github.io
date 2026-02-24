@@ -676,8 +676,8 @@ function updateKeyIndicators(keyId) {
 
 function refreshKeymap(pkt) {
 	if (!pkt) return;
-	console.log("Packet: -------------------------------------------------------------------");
-	console.log(pkt);
+	//console.log("Packet: -------------------------------------------------------------------");
+	//console.log(pkt);
 	console.log("Refreshing keymap...");
 	KEY_LAYOUT.forEach(k => {
 		KEYMAP_DATAS[k.id].keydata = pkt[k.id][1];
@@ -842,11 +842,11 @@ async function hid_request_configs() {
 			// Note: receiveFeatureReport returns a DataView
 			const dataView = await device.receiveFeatureReport(REPORT_ID);
 			const data = new Uint8Array(dataView.buffer);
-			console.log(data);
+			//console.log(data);
 			config_packets.push(data);
 			// console.log(config_packets);
 		}
-		console.log(config_packets);
+		//console.log(config_packets);
 		console.log("Config Read Complete.");
 		process_received_config_packets(config_packets);
 		refreshConfigs();
@@ -865,7 +865,7 @@ async function hid_send_config(index) {
 	// this is stupid but still i want to make sure it works
 	cmdData[6] = mactra_config[index].value;
 	
-	console.log(cmdData);
+	//console.log(cmdData);
 	console.log("Sending config set command for config ID " + index + "...");
 	try {
 		await device.sendFeatureReport(REPORT_ID, cmdData);
@@ -881,7 +881,7 @@ async function hid_save_config() {
 	// has_unsaved_config_changes
 	const cmdData = new Uint8Array(PACKET_SIZE);
 	cmdData[0] = 0x31;
-	console.log(cmdData);
+	// console.log(cmdData);
 	console.log("Sending config save command...");
 	try {
 		await device.sendFeatureReport(REPORT_ID, cmdData);
@@ -909,11 +909,11 @@ async function hid_request_keymaps() {
 			// Note: receiveFeatureReport returns a DataView
 			const dataView = await device.receiveFeatureReport(REPORT_ID);
 			const data = new Uint8Array(dataView.buffer);
-			console.log("Data received. -----------------------------------");
-			console.log(data);
+			//console.log("Data received. -----------------------------------");
+			//console.log(data);
 			packets[i] = process_received_packet(data);
-			console.log("Processed: -----------------------------------");
-			console.log(packets[i]);
+			//console.log("Processed: -----------------------------------");
+			//console.log(packets[i]);
 			// console.log(toHex(data[7]) + " " + toHex(data[6]) + " " + toHex(data[5]) + " " + toHex(data[4]) );
 		}
 		console.log("Keymap Read Complete.");
@@ -1134,10 +1134,29 @@ document.getElementById('btn-revert-changes').addEventListener('click', async ()
 	KEY_LAYOUT.forEach(k => {
 		const id = k.id;
 		if ( KEYMAP_DATAS[id].keydata_original != KEYMAP_DATAS[id].keydata) {
+			console.log("Different keymap detected on ID " + id);
 			KEYMAP_DATAS[id].keydata = KEYMAP_DATAS[id].keydata_original;
 			hid_send_keymap(id);
 		}
 	});
+	console.log("Reverted keymap.");
+	
+	await hid_request_keymaps();
+	await hid_request_configs();
+});
+
+document.getElementById('btn-load-default').addEventListener('click', async () => {
+	if (!device) return;
+	KEY_LAYOUT.forEach(k => {
+		const id = k.id;
+		if ( KEYMAP_DATAS[id].keydata_default != KEYMAP_DATAS[id].keydata) {
+			console.log("Different keymap detected on ID " + id);
+			KEYMAP_DATAS[id].keydata = KEYMAP_DATAS[id].keydata_default;
+			hid_send_keymap(id);
+		}
+	});
+	
+	console.log("Loaded default keymap.");
 	
 	await hid_request_keymaps();
 	await hid_request_configs();
