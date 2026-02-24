@@ -284,9 +284,13 @@ KEYMAP_DATAS[12].keydata_default = 0x69;
 KEYMAP_DATAS[13].keydata_default = MACTRA_CONSUMER_FLAG | 0xB3;
 KEYMAP_DATAS[14].keydata_default = 0x7F;
 
-//KEYMAP_DATAS[5].keydata = MACTRA_CONSUMER_FLAG | 0x70;
+function set_debug_data() {
+	KEY_LAYOUT.forEach(k => {
+		KEYMAP_DATAS[k.id].keydata = KEYMAP_DATAS[k.id].keydata_default;
+	});
+}
 
-// set default label with KEYMAP_DATAS;
+set_debug_data();
 
 KEY_LAYOUT.forEach(k => {
 	// console.log(k.label);
@@ -672,6 +676,7 @@ function updateKeyIndicators(keyId) {
 
 function refreshKeymap(pkt) {
 	if (!pkt) return;
+	console.log("Refreshing keymap...");
 	KEY_LAYOUT.forEach(k => {
 		KEYMAP_DATAS[k.id].keydata = pkt[k.id][1];
 
