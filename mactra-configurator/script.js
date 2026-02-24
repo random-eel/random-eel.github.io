@@ -1046,7 +1046,6 @@ document.getElementById('btn-connect').addEventListener('click', async () => {
 	// Simulator Mode (Right click or hold shift to skip connection)
 	//refreshConfigs(); // debug
 	if (!device) {
-		device = true;
 		// if its not connected
 		await hid_connect();
 		if (device) {
@@ -1057,8 +1056,8 @@ document.getElementById('btn-connect').addEventListener('click', async () => {
 			document.getElementById('btn-write').disabled = false;
 			document.getElementById('btn-revert-changes').style.display = 'unset';
 			document.getElementById('btn-revert-changes').style.disabled = false;
-			// await hid_request_keymaps();
-			// await hid_request_configs();
+			await hid_request_keymaps();
+			await hid_request_configs();
 
 			KEY_LAYOUT.forEach(k => {
 				KEYMAP_DATAS[k.id].keydata_original = KEYMAP_DATAS[k.id].keydata;
@@ -1070,8 +1069,7 @@ document.getElementById('btn-connect').addEventListener('click', async () => {
 		}
 	} else {
 		// if its already connected
-		//device.close();
-		device = false;
+		device.close();
 		document.getElementById('btn-connect').classList.remove('disconnect');
 		document.getElementById('btn-connect').textContent = "Connect Keyboard";
 		document.getElementById('btn-read').disabled = true;
@@ -1123,6 +1121,7 @@ document.getElementById('btn-apply-led').addEventListener('click', async () => {
 });
 
 document.getElementById('btn-revert-changes').addEventListener('click', async () => {
+	if (!device) return;
 	KEY_LAYOUT.forEach(k => {
 		const id = k.id;
 		if ( KEYMAP_DATAS[id].keydata_original != KEYMAP_DATAS[id].keydata) {
