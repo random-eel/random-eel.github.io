@@ -1065,6 +1065,8 @@ document.getElementById('btn-connect').addEventListener('click', async () => {
 			document.getElementById('btn-write').disabled = false;
 			document.getElementById('btn-revert-changes').style.display = 'unset';
 			document.getElementById('btn-revert-changes').style.disabled = false;
+			document.getElementById('btn-load-default').style.display = 'unset';
+			document.getElementById('btn-load-default').style.disabled = false;
 			await hid_request_keymaps();
 			await hid_request_configs();
 
@@ -1083,11 +1085,13 @@ document.getElementById('btn-connect').addEventListener('click', async () => {
 		document.getElementById('btn-connect').textContent = "Connect Keyboard";
 		document.getElementById('btn-read').disabled = true;
 		document.getElementById('btn-write').disabled = true;
-		document.getElementById('btn-revert-changes').style.display = false;
-		document.getElementById('btn-revert-changes').style.disabled = true;
 		document.getElementById('status-text').textContent = "Disconnected";
 		document.getElementById('status-text').style.color = "#eee";
+		document.getElementById('btn-revert-changes').style.disabled = true;
 		document.getElementById('btn-revert-changes').style.display = 'none';
+		document.getElementById('btn-load-default').style.disabled = true;
+		document.getElementById('btn-load-default').style.display = 'none';
+
 	}
 });
 
