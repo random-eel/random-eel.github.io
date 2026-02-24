@@ -46,6 +46,7 @@
         button:hover { background: #444; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         button.primary { background: var(--accent-color); border-color: #0056b3; }
+		button.disconnect { background: #ff6000; border-color: #b35600; }
 		
 		button.unsaved-changes {
 			background-color: #ff9800 !important; /* Warning Orange */

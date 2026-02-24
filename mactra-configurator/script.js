@@ -290,7 +290,6 @@ KEYMAP_DATAS[14].keydata_default = 0x7F;
 
 KEY_LAYOUT.forEach(k => {
 	// console.log(k.label);
-	//KEYMAP_DATAS[k.id].keydata =  KEYMAP_DATAS[k.id].keydata_default;
 	k.label = getKeyLabel(KEYMAP_DATAS[k.id].keydata);
 });
 
@@ -942,15 +941,37 @@ async function hid_send_keymap(index) {
 }
 
 async function hid_save_keymap() {
+	if (!device) return;
 	// has_unsaved_config_changes
 	const cmdData = new Uint8Array(PACKET_SIZE);
 	cmdData[0] = 0x30;
 	console.log(cmdData);
-	console.log("Sending keymap keymap save command...");
+	console.log("Sending keymap save command...");
 	try {
 		await device.sendFeatureReport(REPORT_ID, cmdData);
 	} catch (err) {
 		alert("Send Failed: " + err.message);
+	}
+	console.log("Done sending keymap save command.");
+}
+
+async function hid_send_factory_reset() {
+	if (!device) return;
+	// has_unsaved_config_changes
+	const cmdData = new Uint8Array(PACKET_SIZE);
+	cmdData[0] = 0xF0;
+	console.log(cmdData);
+	console.log("Sending factory reset command...");
+	try {
+		await device.sendFeatureReport(REPORT_ID, cmdData);
+		// try waiting it lol
+		const dataView = await device.receiveFeatureReport(REPORT_ID);
+		const data = new Uint8Array(dataView.buffer);
+		if (data[0] == 0xF1) {
+			console.log("Factory reset validated");
+		}
+	} catch (err) {
+		alert("Send or receive Failed: " + err.message);
 	}
 	console.log("Done sending keymap save command.");
 }
@@ -1024,20 +1045,42 @@ function update_led_color_2() {
 document.getElementById('btn-connect').addEventListener('click', async () => {
 	// Simulator Mode (Right click or hold shift to skip connection)
 	//refreshConfigs(); // debug
-	
-	await hid_connect();
-	if (device) {
-		document.getElementById('status-text').textContent = "Connected: " + device.productName;
-		document.getElementById('status-text').style.color = "#4caf50";
-		document.getElementById('btn-connect').style.display = 'none';
-		document.getElementById('btn-read').disabled = false;
-		document.getElementById('btn-write').disabled = false;
-		await hid_request_keymaps();
-		await hid_request_configs();
-		
-		KEY_LAYOUT.forEach(k => {
-			KEYMAP_DATAS[k.id].keydata_original = KEYMAP_DATAS[k.id].keydata;
-		});
+	if (!device) {
+		device = true;
+		// if its not connected
+		await hid_connect();
+		if (device) {
+			document.getElementById('status-text').textContent = "Connected: " + device.productName;
+			document.getElementById('status-text').style.color = "#4caf50";
+			// document.getElementById('btn-connect').style.display = 'none';
+			document.getElementById('btn-read').disabled = false;
+			document.getElementById('btn-write').disabled = false;
+			document.getElementById('btn-revert-changes').style.display = 'unset';
+			document.getElementById('btn-revert-changes').style.disabled = false;
+			// await hid_request_keymaps();
+			// await hid_request_configs();
+
+			KEY_LAYOUT.forEach(k => {
+				KEYMAP_DATAS[k.id].keydata_original = KEYMAP_DATAS[k.id].keydata;
+			});
+
+			// change them to disconnect
+			document.getElementById('btn-connect').classList.add('disconnect');
+			document.getElementById('btn-connect').textContent = "Disconnect";
+		}
+	} else {
+		// if its already connected
+		//device.close();
+		device = false;
+		document.getElementById('btn-connect').classList.remove('disconnect');
+		document.getElementById('btn-connect').textContent = "Connect Keyboard";
+		document.getElementById('btn-read').disabled = true;
+		document.getElementById('btn-write').disabled = true;
+		document.getElementById('btn-revert-changes').style.display = false;
+		document.getElementById('btn-revert-changes').style.disabled = true;
+		document.getElementById('status-text').textContent = "Disconnected";
+		document.getElementById('status-text').style.color = "#eee";
+		document.getElementById('btn-revert-changes').style.display = 'none';
 	}
 });
 
@@ -1077,7 +1120,19 @@ document.getElementById('btn-apply-led').addEventListener('click', async () => {
 	const saveBtnLED = document.getElementById('btn-apply-led');
 	saveBtnLED.classList.remove('unsaved-changes');
 	saveBtnLED.textContent = "Apply LEDs";
+});
+
+document.getElementById('btn-revert-changes').addEventListener('click', async () => {
+	KEY_LAYOUT.forEach(k => {
+		const id = k.id;
+		if ( KEYMAP_DATAS[id].keydata_original != KEYMAP_DATAS[id].keydata) {
+			KEYMAP_DATAS[id].keydata = KEYMAP_DATAS[id].keydata_original;
+			hid_send_keymap(id);
+		}
+	});
 	
+	await hid_request_keymaps();
+	await hid_request_configs();
 });
 
 document.getElementById('led-mode-select').addEventListener('change', (event) => {
@@ -1127,6 +1182,8 @@ document.getElementById('led-color-2').addEventListener('change', (event) => {
 	clearInterval(led_picker_active[1]);
 	led_picker_active[1] = 0;
 });
+
+
 
 
 // Initialize
