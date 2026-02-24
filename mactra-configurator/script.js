@@ -12,6 +12,7 @@ const MATRIX_SIZE = 16;
 
 // flags for keymaps
 const MACTRA_CONSUMER_FLAG = (0x10 << 24);
+const MACTRA_TOGGLE_FLAG = (0x1 << 24);
 const KEY_MOD_LCTRL = (0x01 << 16);
 const KEY_MOD_LSHIFT = (0x02 << 16);
 const KEY_MOD_LALT = (0x04 << 16);
@@ -240,6 +241,11 @@ function getKeyLabel(code, longer) {
 	if ( ( (code & (0xFF << 24)) == MACTRA_CONSUMER_FLAG ) || ( (code & (0xFF << 8)) != 0 ) ) { // if its a consumer key
 		return longer ? "Consumer: 0x" + toHex(code & 0xFFFF) : "[" + toHex(code & 0xFFFF) + "]";
 	}
+	
+	if (code & MACTRA_TOGGLE_FLAG) {
+		code &= ~MACTRA_TOGGLE_FLAG;
+	}
+	
 	if ( (code & (0xFF << 16)) != 0 ) { // if it has mod keys
 		return longer ? HID_CODES[code & 0xFF].name : HID_CODES[code & 0xFF].sname;
 	}
@@ -322,6 +328,8 @@ let color_updated = [false, false, false];
 const consumerCheck = document.getElementById('flag-consumer');
 const consumerHex = document.getElementById('consumer-hex-input');
 const pickerGrid = document.getElementById('picker-grid');
+
+const toggleKeyCheck = document.getElementById('flag-toggle');
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -656,7 +664,7 @@ function updateKeyIndicators(keyId) {
 	// 2. Check Top Bars (Assuming you have boolean flags for these)
 	const flags_byte = data.keydata & (0xFF << 24);
 	const hasConsumer = ( (flags_byte == MACTRA_CONSUMER_FLAG) | ((data.keydata >> 8) & 0xFF != 0) ); 
-	const hasReserved = ( (data.keydata & (0xFF << 24)) == 0x01);
+	const hasReserved = ( (data.keydata & MACTRA_TOGGLE_FLAG) >> 24 );
 
 	// Toggle Top Bars
 	document.getElementById(`ind-top-${keyId}-0`).style.opacity = hasConsumer ? "1" : "0.15";
@@ -773,6 +781,17 @@ consumerHex.addEventListener('input', (e) => {
 		updatePreview();
 	}
 });
+
+
+// --- 1. The Toggle Event ---
+toggleKeyCheck.addEventListener('change', (e) => {
+	draftSelection.keydata &= ~MACTRA_TOGGLE_FLAG;
+	if (e.target.checked) {
+		draftSelection.keydata |= MACTRA_TOGGLE_FLAG;
+	}
+	updatePreview();
+});
+
 
 // --------------------------------------------------------------------------------------------------------------------
 // --- 5. WEBHID CONNECTION ---
