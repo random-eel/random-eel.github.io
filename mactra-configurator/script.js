@@ -413,10 +413,8 @@ function getRGBArrayFromText(hex) {
 	return array;
 }
 
-// console.log();
 
 // --------------------------------------------------------------------------------------------------------------------
-
 // --- 3. UI GENERATION ---
 function initUI() {
 	const svgGroup = document.getElementById('keys-layer');
@@ -509,6 +507,8 @@ function initUI() {
 	Object.entries(HID_CODES).forEach(([code, data]) => {
 		const div = document.createElement("div");
 		div.className = "picker-key";
+		div.id = `picker-btn-${parseInt(code)}`;
+
 		div.textContent = data.name;
 		div.onclick = () => selectDraftKey(parseInt(code));
 		pickerGrid.appendChild(div);
@@ -538,7 +538,6 @@ ledInputs.forEach(id => {
 function updateModalFlagDisplay(keyData) {
 	// Set Checkboxes based on loaded flags
 	// Assuming Flags: Bit 0=Ctrl, Bit 1=Shift, Bit 2=Alt, Bit 3=Win, 4-7 for right side
-	
 	editingKeyData = keyData;
 	//console.log(editingKeyData);
 	flags_byte = editingKeyData & (0xFF << 24);
@@ -551,11 +550,7 @@ function updateModalFlagDisplay(keyData) {
 	document.getElementById('flag-ctrl-right').checked  = (editingKeyData & KEY_MOD_RCTRL) !== 0;
 	document.getElementById('flag-shift-right').checked = (editingKeyData & KEY_MOD_RSHIFT) !== 0;
 	document.getElementById('flag-alt-right').checked   = (editingKeyData & KEY_MOD_RALT) !== 0;
-	document.getElementById('flag-gui-right').checked   = (editingKeyData & KEY_MOD_RMETA) !== 0;
-	
-	// console.log(( (flags_byte == MACTRA_CONSUMER_FLAG) | ((keyData >> 8) & 0xFF != 0) ));
-	 
-	// toggleModalConsumer( (flags_byte == MACTRA_CONSUMER_FLAG) | ((keyData >> 8) & 0xFF != 0) );
+	document.getElementById('flag-gui-right').checked   = (editingKeyData & KEY_MOD_RMETA) !== 0;	
 }
 
 function openModal(keyIndex) {
@@ -593,6 +588,22 @@ function openModal(keyIndex) {
 	document.querySelectorAll('.picker-key').forEach(el => el.style.border = "1px solid #555");
 	const activeEl = document.getElementById(`picker-btn-${draftSelection.keydata}`);
 	if(activeEl) activeEl.style.border = "2px solid #007bff";
+	
+	// Highlighting already selected keycode ------------------------------------------------------------------------
+	// 1. Remove highlight from all buttons
+	document.querySelectorAll('.picker-key').forEach(btn => btn.classList.remove('selected'));
+
+	// 2. Find the button for the current draft code
+	const activeBtn = document.getElementById(`picker-btn-${draftSelection.keydata & 0xFF}`);
+
+	if (activeBtn) {
+		activeBtn.classList.add('selected');
+
+		// 3. The Magic Scroll
+		// block: 'center' ensures it scrolls so the button is in the middle of the scrollable area
+		activeBtn.scrollIntoView({ behavior: 'instant', block: 'center' });
+	}
+	
 }
 
 function closeModal() {
@@ -674,6 +685,15 @@ function updateKeyIndicators(keyId) {
 	// Toggle Top Bars
 	document.getElementById(`ind-top-${keyId}-0`).style.opacity = hasConsumer ? "1" : "0.15";
 	document.getElementById(`ind-top-${keyId}-1`).style.opacity = hasReserved ? "1" : "0.15";
+}
+
+function updateAllKeyDisplay() {
+	KEY_LAYOUT.forEach(k => {
+		const labelEl = document.getElementById(`key-label-${k.id}`);
+		labelEl.textContent = getKeyLabel(KEYMAP_DATAS[k.id].keydata);
+		
+		updateKeyIndicators(k.id);
+	});
 }
 
 function refreshKeymap(pkt) {
@@ -854,6 +874,7 @@ async function hid_request_configs() {
 		refreshConfigs();
 	} catch (err) {
 		alert("Read Failed: " + err.message);
+		return;
 	}
 }
 
@@ -873,6 +894,7 @@ async function hid_send_config(index) {
 		await device.sendFeatureReport(REPORT_ID, cmdData);
 	} catch (err) {
 		alert("Send Failed: " + err.message);
+		return;
 	}
 	
 	console.log("Done sending config set command.");
@@ -889,6 +911,7 @@ async function hid_save_config() {
 		await device.sendFeatureReport(REPORT_ID, cmdData);
 	} catch (err) {
 		alert("Send Failed: " + err.message);
+		return;
 	}
 	console.log("Done sending config save command.");
 }
@@ -922,6 +945,7 @@ async function hid_request_keymaps() {
 		refreshKeymap(packets);
 	} catch (err) {
 		alert("Read Failed: " + err.message);
+		return;
 	}
 }
 
@@ -946,6 +970,7 @@ async function hid_send_keymap(index) {
 		await device.sendFeatureReport(REPORT_ID, cmdData);
 	} catch (err) {
 		alert("Send Failed: " + err.message);
+		return;
 	}
 	
 	console.log("Done sending keymap set command.");
@@ -962,6 +987,7 @@ async function hid_save_keymap() {
 		await device.sendFeatureReport(REPORT_ID, cmdData);
 	} catch (err) {
 		alert("Send Failed: " + err.message);
+		return;
 	}
 	console.log("Done sending keymap save command.");
 }
@@ -983,6 +1009,7 @@ async function hid_send_factory_reset() {
 		}
 	} catch (err) {
 		alert("Send or receive Failed: " + err.message);
+		return;
 	}
 	console.log("Done sending keymap save command.");
 }
@@ -998,6 +1025,7 @@ async function get_firm_data() {
 		console.log("HW Version: " + data[7] + " / FW Version: " + toHex(data[5]) + toHex(data[6]) );
 	} catch (err) {
 		alert("Send or receive Failed: " + err.message);
+		return;
 	}
 }
 
@@ -1073,7 +1101,7 @@ document.getElementById('btn-connect').addEventListener('click', async () => {
 		// if its not connected
 		await hid_connect();
 		if (device) {
-			get_firm_data();
+			await get_firm_data();
 			document.getElementById('status-text').textContent = "Connected: " + device.productName;
 			document.getElementById('status-text').style.color = "#4caf50";
 			// document.getElementById('btn-connect').style.display = 'none';
@@ -1107,7 +1135,13 @@ document.getElementById('btn-connect').addEventListener('click', async () => {
 		document.getElementById('btn-revert-changes').style.display = 'none';
 		document.getElementById('btn-load-default').style.disabled = true;
 		document.getElementById('btn-load-default').style.display = 'none';
-
+		device = null;
+		
+		KEY_LAYOUT.forEach(k => {
+			KEYMAP_DATAS[k.id].keydata = 0;
+		});
+		
+		updateAllKeyDisplay();
 	}
 });
 

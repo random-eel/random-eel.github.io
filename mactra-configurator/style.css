@@ -153,6 +153,8 @@
         }
         .picker-key:hover { background: var(--accent-color); }
 
+        .picker-key.selected { background: var(--accent-color); }
+
         /* --- LED Color Picker --- */
         #led-panel {
             position: absolute;
