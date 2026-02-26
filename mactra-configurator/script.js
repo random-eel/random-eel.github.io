@@ -2,7 +2,6 @@
 * You wanted to have some spaghetti? There's no turning back. FINISH IT. (Send help)
 */
 // --- 1. CONFIGURATION ---
-// Your specific USB IDs
 const VENDOR_ID = 0xF331; 
 const PRODUCT_ID = 0x3330;
 const USAGE_PAGE = 0xFF33;
@@ -32,7 +31,7 @@ const MASK_KEY  = 0xFF;
 // --- 2. LAYOUT DATA (The "Map") ---
 // x, y: Position on screen
 // w, h: Size of key (standard key is 50x50 units)
-// id: The index in your firmware array (0 to 15, etc.)
+// id: The index in the firmware array (0 to 15, etc.)
 let KEY_LAYOUT = [
 	{ id: 1, label: "Bri+", name:"Hat Switch Up", x: 100, y: 98, w: 40, h: 40 },	// L
 	{ id: 2, label: "Prev", name:"Hat Switch Left", x: 40, y: 152, w: 40, h: 40 }, 	// U
@@ -130,7 +129,7 @@ const HID_CODES = {
 	0x43: { name: "F10", sname: "F10" },
 	0x44: { name: "F11", sname: "F11" },
 	0x45: { name: "F12", sname: "F12" },
-	0x46: { name: "Print Screen", sname: "PsCr" },
+	0x46: { name: "Print Screen", sname: "📸" },
 	0x47: { name: "Scroll Lock", sname: "ScrL" },
 	0x48: { name: "Pause", sname: "Paus" },
 	// --- Navigation (Usage 0x49 - 0x52) ---
@@ -164,6 +163,7 @@ const HID_CODES = {
 	0x62: { name: "Num 0", sname: "NP0" },
 	0x63: { name: "Num .", sname: "NP." },
 	
+	// -- F13-F24 keys
 	0x68: { name: "F13", sname: "F13", },
 	0x69: { name: "F14", sname: "F14", },
 	0x6A: { name: "F15", sname: "F15", },
@@ -189,9 +189,9 @@ const HID_CODES = {
 	#define KEY_PASTE 0x7d // Keyboard Paste
 	#define KEY_FIND 0x7e // Keyboard Find
 	*/
-	0x7F: { name: "Mute", sname: "Mute" },
-	0x80: { name: "Volume Up", sname: "Vol+" },
-	0x81: { name: "Volume Down", sname: "Vol-" },
+	0x7F: { name: "Mute", sname: "🔇" },
+	0x80: { name: "Volume Up", sname: "🔊" },
+	0x81: { name: "Volume Down", sname: "🔉" },
 	0x82: { name: "Caps Lock", sname: "CapL" },
 	0x83: { name: "Num Lock", sname: "NumL" },
 	0x84: { name: "Scroll Lock", sname: "ScrL" },
@@ -199,6 +199,8 @@ const HID_CODES = {
 	// 87-98
 	
 	// --- Modifiers (Usage 0xE0 - 0xE7) ---
+	// OUR FIRMWARE CAN ONLY SEND TILL 0xDF
+	/*
 	0xE0: { name: "Left Control", sname: "LCtl" },
 	0xE1: { name: "Left Shift", sname: "LSft" },
 	0xE2: { name: "Left Alt", sname: "LAlt" },
@@ -207,15 +209,18 @@ const HID_CODES = {
 	0xE5: { name: "Right Shift", sname: "RSft" },
 	0xE6: { name: "Right Alt", sname: "RAlt" },
 	0xE7: { name: "Right GUI (Win)", sname: "RWin" },
+	*/
 	
-	0xE8: { name: "Play Pause", sname: "MPLY" },
-	0xE9: { name: "Stop CD", sname: "MSTPC" },
-	0xEA: { name: "Previous Song", sname: "MPRV" },
-	0xEB: { name: "Next Song", sname: "MNXT" },
-	0xEC: { name: "Eject CD", sname: "CDEJ" },
-	0xED: { name: "Media Volume Up", sname: "MVLU" },
-	0xEE: { name: "Media Volume Down", sname: "MVLD" },
-	0xEF: { name: "Media Mute", sname: "MMUT" },
+	// these are specifically enabled because it's trapped on firmware side
+	0xE8: { name: "Play Pause", sname: "⏯️" },
+	0xE9: { name: "Stop CD", sname: "⏹️" },
+	0xEA: { name: "Previous Song", sname: "⏮️" },
+	0xEB: { name: "Next Song", sname: "⏭️" },
+	//0xEC: { name: "Eject CD", sname: "CDEJ" },
+	0xED: { name: "Media Volume Up", sname: "🔊" },
+	0xEE: { name: "Media Volume Down", sname: "🔉" },
+	0xEF: { name: "Media Mute", sname: "🔇" },
+	/*
 	0xF0: { name: "Media WWW", sname: "MWWW" },
 	0xF1: { name: "Media Back", sname: "MBAK" },
 	0xF2: { name: "Media Forward", sname: "MFWD" },
@@ -228,19 +233,28 @@ const HID_CODES = {
 	0xF9: { name: "Media Coffee", sname: "MCOF" },
 	0xFA: { name: "Media Refresh", sname: "MREF" },
 	0xFB: { name: "Media Calc", sname: "MCAL" },
+	*/
 	
 	// --- Media / Special (Check your specific Usage Page handling!) ---
 	// Note: If you use a separate "Consumer Page", these IDs will differ. 
 	// This assumes Standard HID Page 0x07 context.
 	0x65: { name: "Application (Menu key)", sname: "MENU" },
 	0x66: { name: "Power", sname: "PWR" },
+	
+	0x1000006F: { name: "Brightness +", sname: "🔆" },
+	0x10000070: { name: "Brightness -", sname: "🔅" },
+	0x100000B3: { name: "Fast Forward", sname: "⏩" },
+	0x100000B4: { name: "Rewind", sname: "⏪" },
+	
+	0x10000183: { name: "Open Media", sname: "📺" },
+	0x1000018A: { name: "Open Mail", sname: "📧" },
+	0x10000192: { name: "Open Calc", sname: "🧮" },
+	0x10000194: { name: "Open Explorer", sname: "🖥️" },
+	
 };
 
 // Helper function to get label safely
 function getKeyLabel(code, longer) {
-	if ( ( (code & (0xFF << 24)) == MACTRA_CONSUMER_FLAG ) || ( (code & (0xFF << 8)) != 0 ) ) { // if its a consumer key
-		return longer ? "Consumer: 0x" + toHex(code & 0xFFFF) : "[" + toHex(code & 0xFFFF) + "]";
-	}
 	
 	if (code & MACTRA_TOGGLE_FLAG) {
 		code &= ~MACTRA_TOGGLE_FLAG;
@@ -253,6 +267,11 @@ function getKeyLabel(code, longer) {
 	if (HID_CODES[code]) {
 		return longer ? HID_CODES[code].name : HID_CODES[code].sname;
 	}
+
+	if ( ( (code & (0xFF << 24)) == MACTRA_CONSUMER_FLAG ) || ( (code & (0xFF << 8)) != 0 ) ) { // if its a consumer key
+		return longer ? "Consumer: 0x" + toHex(code & 0xFFFF) : "[" + toHex(code & 0xFFFF) + "]";
+	}
+	
 	return "0x" + code.toString(16).toUpperCase(); // Fallback for unknown keys
 }
 
@@ -284,21 +303,10 @@ KEYMAP_DATAS[12].keydata_default = 0x69;
 KEYMAP_DATAS[13].keydata_default = MACTRA_CONSUMER_FLAG | 0xB3;
 KEYMAP_DATAS[14].keydata_default = 0x7F;
 
-/*
-function set_debug_data() {
-	KEY_LAYOUT.forEach(k => {
-		KEYMAP_DATAS[k.id].keydata = KEYMAP_DATAS[k.id].keydata_default;
-	});
-}
-*/
-
-// set_debug_data();
-
 KEY_LAYOUT.forEach(k => {
 	// console.log(k.label);
 	k.label = getKeyLabel(KEYMAP_DATAS[k.id].keydata);
 });
-
 
 // State
 let device = null;
@@ -497,10 +505,9 @@ function initUI() {
 			bar.style.opacity = "0.15"; // 0.15 gives a faint "ghost" outline. Use "0" for totally invisible.
 			bar.style.pointerEvents = "none"; 
 			bar.style.transition = "opacity 0.2s";
-
+			
 			g.appendChild(bar);
 		}
-
 		
 		svgGroup.appendChild(g);
 	});
@@ -513,6 +520,9 @@ function initUI() {
 
 		div.textContent = data.name;
 		div.onclick = () => selectDraftKey(parseInt(code));
+		if ( (code >> 24) & 0x10 ) {
+			div.style.backgroundColor = "#303440";
+		}
 		pickerGrid.appendChild(div);
 	});
 }
