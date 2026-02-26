@@ -47,6 +47,7 @@
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         button.primary { background: var(--accent-color); border-color: #0056b3; }
 		button.disconnect { background: #ff6000; border-color: #b35600; }
+        button.help { font-size: 14px; padding: 8px 15px; background: #0b2; border-color: #061; animation: pulse-green 1.5s infinite;}
 		
 		button.unsaved-changes {
 			background-color: #ff9800 !important; /* Warning Orange */
@@ -60,6 +61,12 @@
 			0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
 			70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
 			100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+		}
+
+		@keyframes pulse-green {
+			0% { box-shadow: 0 0 0 0 rgba(0, 255, 128, 0.7); }
+			70% { box-shadow: 0 0 0 10px rgba(255, 128, 0, 0); }
+			100% { box-shadow: 0 0 0 0 rgba(255, 128, 0, 0); }
 		}
         
         /* --- The Keyboard Stage (SVG) --- */

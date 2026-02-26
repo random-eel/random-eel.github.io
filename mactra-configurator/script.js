@@ -326,6 +326,7 @@ let mactra_config = {
 };
 let has_unsaved_keymap_changes = false;
 let has_unsaved_config_changes = false;
+let lock_config_updating = false;
 
 let led_picker_active = [0,0,0];
 let color_updated = [false, false, false];
@@ -357,6 +358,7 @@ function process_received_config_packets(packet) {
 	for (let i=0; i<packet.length; i++) {
 		if(mactra_config[i]) {
 			mactra_config[i].value = packet[i][7];
+			// console.log(packet[i][7]);
 		}
 	}
 }
@@ -719,6 +721,9 @@ function refreshConfigs() {
 	document.getElementById('led-refresh-select').value = led_refresh_value;
 
 	setBrightnessValue(led_brightness_value);
+
+	const percent = Math.round((led_brightness_value / 32) * 100);
+	document.getElementById('bright-val').textContent = percent + '%';
 	
 	document.getElementById('led-color-1').value = getRGBString(mactra_config, 5);
 	document.getElementById('led-color-2').value = getRGBString(mactra_config, 8);
@@ -780,10 +785,19 @@ function toggleModalConsumer(toggle) {
 
 		// Show current code as hex (e.g., "E9")
 		consumerHex.value = (draftSelection.keydata & 0xFFFFFF).toString(16).toUpperCase();
+		consumerHex.style.color = "#ff9800";
+		
+		// btn-open-wiki-description
+		document.getElementById('btn-open-wiki-description').style.display = 'unset';
+		
 	} else {
 		// Restore the Left Grid
 		pickerGrid.style.pointerEvents = "auto";
 		pickerGrid.style.opacity = "1";
+		
+		document.getElementById('btn-open-wiki-description').style.display = 'none';
+		
+		consumerHex.style.color = "#666";
 
 		// Disable Hex Input
 		consumerHex.disabled = true;
@@ -846,107 +860,106 @@ async function hid_connect() {
 	return 0;
 }
 
+async function hid_send_packet(packet) {
+	if (!device) return false;
+	console.log("Sending packets...");
+	try {
+		await device.sendFeatureReport(REPORT_ID, packet);
+	} catch(error) {
+		alert("Packet send failed: " + err.message);
+		return false;
+	}
+	return true;
+}
+
+async function hid_receive_packet() {
+	if (!device) return false;
+	console.log("Receiving packets...");
+	try {
+		const dataView = await device.receiveFeatureReport(REPORT_ID);
+		const data = new Uint8Array(dataView.buffer);
+		if (data[0] != 0x3) return false;
+		return data;
+	} catch(error) {
+		alert("Packet send failed: " + err.message);
+		return false;
+	}
+	return false;
+}
+
 async function hid_request_configs() {
 	if (!device) return;
-	try {
-		for (let i = 0; i < 16; i++) {
-			// STEP A: Send "Set Read Index" Command
-			// Command: [CMD_SET_INDEX (0x30), Index, 0, 0...]
-			const cmdData = new Uint8Array(PACKET_SIZE);
-			cmdData[0] = 0x11;  // CMD
-			cmdData[1] = 0;     // Reserved
-			cmdData[2] = i;     // Index
-			
-			console.log("Sending request report for config index " + i + "...");
-			await device.sendFeatureReport(REPORT_ID, cmdData);
+	lock_config_updating = true;
+	console.log("[hid_request_configs] Requesting config datas...");
+	for (let i = 0; i < 16; i++) {
+		let res = false;
 
-			// STEP B: Read the Data
-			// Note: receiveFeatureReport returns a DataView
-			const dataView = await device.receiveFeatureReport(REPORT_ID);
-			const data = new Uint8Array(dataView.buffer);
-			//console.log(data);
-			config_packets.push(data);
-			// console.log(config_packets);
-		}
-		//console.log(config_packets);
-		console.log("Config Read Complete.");
-		process_received_config_packets(config_packets);
-		refreshConfigs();
-	} catch (err) {
-		alert("Read Failed: " + err.message);
-		return;
+		const cmdData = new Uint8Array(PACKET_SIZE);
+		cmdData[0] = 0x11;  // CMD; request keymap at index
+		cmdData[2] = i;     // Index
+		
+		console.log("[hid_request_configs] Sending config request report for config index " + i + "...");
+		res = await hid_send_packet(cmdData);
+		if (!res) return;
+		res = await hid_receive_packet();
+		if (!res) return;
+		config_packets.push(res);
 	}
-}
-
-async function hid_send_config(index) {
-	if (!device) return;
-	const cmdData = new Uint8Array(PACKET_SIZE);
-	cmdData[0] = 0x21;  // CMD, set config
-	cmdData[1] = 0;     // Reserved
-	cmdData[2] = index;     // Index
-	
-	// this is stupid but still i want to make sure it works
-	cmdData[6] = mactra_config[index].value;
-	
-	//console.log(cmdData);
-	console.log("Sending config set command for config ID " + index + "...");
-	try {
-		await device.sendFeatureReport(REPORT_ID, cmdData);
-	} catch (err) {
-		alert("Send Failed: " + err.message);
-		return;
-	}
-	
-	console.log("Done sending config set command.");
-}
-
-async function hid_save_config() {
-	if (!device) return;
-	// has_unsaved_config_changes
-	const cmdData = new Uint8Array(PACKET_SIZE);
-	cmdData[0] = 0x31;
-	// console.log(cmdData);
-	console.log("Sending config save command...");
-	try {
-		await device.sendFeatureReport(REPORT_ID, cmdData);
-	} catch (err) {
-		alert("Send Failed: " + err.message);
-		return;
-	}
-	console.log("Done sending config save command.");
+	console.log("[hid_request_configs] Config Read Complete.");
+	process_received_config_packets(config_packets);
+	console.log(mactra_config);
+	refreshConfigs();
+	lock_config_updating = false;
 }
 
 async function hid_request_keymaps() {
 	if (!device) return;
-	try {
-		for (let i = 0; i < 16; i++) {
-			// STEP A: Send "Set Read Index" Command
-			// Command: [CMD_SET_INDEX (0x30), Index, 0, 0...]
-			const cmdData = new Uint8Array(PACKET_SIZE);
-			cmdData[0] = 0x10;  // CMD
-			cmdData[1] = 0;     // Reserved
-			cmdData[2] = i;     // Index
-			
-			console.log("Sending request report for matrix ID " + i + "...");
-			await device.sendFeatureReport(REPORT_ID, cmdData);
 
-			// STEP B: Read the Data
-			// Note: receiveFeatureReport returns a DataView
-			const dataView = await device.receiveFeatureReport(REPORT_ID);
-			const data = new Uint8Array(dataView.buffer);
-			//console.log("Data received. -----------------------------------");
-			//console.log(data);
-			packets[i] = process_received_packet(data);
-			//console.log("Processed: -----------------------------------");
-			//console.log(packets[i]);
-			// console.log(toHex(data[7]) + " " + toHex(data[6]) + " " + toHex(data[5]) + " " + toHex(data[4]) );
-		}
-		console.log("Keymap Read Complete.");
-		refreshKeymap(packets);
-	} catch (err) {
-		alert("Read Failed: " + err.message);
-		return;
+	console.log("[hid_request_keymaps] Requesting keymaps...");
+	for (let i = 0; i < 16; i++) {
+		let res = false;
+
+		const cmdData = new Uint8Array(PACKET_SIZE);
+		cmdData[0] = 0x10;  // CMD; request keymap at index
+		cmdData[2] = i;     // Index
+		
+		console.log("[hid_request_keymaps] Sending keymap request report for matrix id " + i + "...");
+		res = await hid_send_packet(cmdData);
+		if (!res) return;
+		res = await hid_receive_packet();
+		if (!res) return;
+		packets[i] = process_received_packet(res);
 	}
+	console.log("[hid_request_keymaps] Keymap Read Complete.");
+	console.log(packets);
+	refreshKeymap(packets);
+}
+
+async function hid_send_config(index) {
+	if (!device || lock_config_updating) return;
+	const cmdData = new Uint8Array(PACKET_SIZE);
+	cmdData[0] = 0x21;  // CMD, set config
+	cmdData[2] = index;     // Index
+	cmdData[6] = mactra_config[index].value; // value itself
+	
+	console.log("[hid_send_config] Sending config set command...");
+	
+	res = await hid_send_packet(cmdData);
+	if (!res) return;
+	
+	console.log("[hid_send_config] Done sending config set command.");
+}
+
+async function hid_save_config() {
+	if (!device || lock_config_updating) return;
+	// has_unsaved_config_changes
+	const cmdData = new Uint8Array(PACKET_SIZE);
+	cmdData[0] = 0x31;
+	// console.log(cmdData);
+	console.log("[hid_save_config] Sending config save command...");
+	res = await hid_send_packet(cmdData);
+	if (!res) return;
+	console.log("[hid_save_config] Done sending config save command.");
 }
 
 async function hid_send_keymap(index) {
@@ -955,7 +968,6 @@ async function hid_send_keymap(index) {
 	
 	const cmdData = new Uint8Array(PACKET_SIZE);
 	cmdData[0] = 0x20;  // CMD, set keymap
-	cmdData[1] = 0;     // Reserved
 	cmdData[2] = index;     // Index
 	
 	// this is stupid but still i want to make sure it works
@@ -964,16 +976,11 @@ async function hid_send_keymap(index) {
 	cmdData[5] = keymap_array[1];
 	cmdData[6] = keymap_array[0];
 	
-	console.log(cmdData);
-	console.log("Sending keymap set command for matrix ID " + index + "...");
-	try {
-		await device.sendFeatureReport(REPORT_ID, cmdData);
-	} catch (err) {
-		alert("Send Failed: " + err.message);
-		return;
-	}
-	
-	console.log("Done sending keymap set command.");
+	// console.log(cmdData);
+	console.log("[hid_send_keymap] Sending keymap set command for matrix ID " + index + "...");
+	res = await hid_send_packet(cmdData);
+	if (!res) return;
+	console.log("[hid_send_keymap] Done sending keymap set command.");
 }
 
 async function hid_save_keymap() {
@@ -981,15 +988,11 @@ async function hid_save_keymap() {
 	// has_unsaved_config_changes
 	const cmdData = new Uint8Array(PACKET_SIZE);
 	cmdData[0] = 0x30;
-	console.log(cmdData);
-	console.log("Sending keymap save command...");
-	try {
-		await device.sendFeatureReport(REPORT_ID, cmdData);
-	} catch (err) {
-		alert("Send Failed: " + err.message);
-		return;
-	}
-	console.log("Done sending keymap save command.");
+	
+	console.log("[hid_save_keymap] Sending keymap save command...");
+	res = await hid_send_packet(cmdData);
+	if (!res) return;
+	console.log("[hid_save_keymap] Done sending keymap save command.");
 }
 
 async function hid_send_factory_reset() {
@@ -998,20 +1001,10 @@ async function hid_send_factory_reset() {
 	const cmdData = new Uint8Array(PACKET_SIZE);
 	cmdData[0] = 0xF0;	// CMD; request factory reset
 	console.log(cmdData);
-	console.log("Sending factory reset command...");
-	try {
-		await device.sendFeatureReport(REPORT_ID, cmdData);
-		// try waiting it lol
-		const dataView = await device.receiveFeatureReport(REPORT_ID);
-		const data = new Uint8Array(dataView.buffer);
-		if (data[0] == 0xF1) {
-			console.log("Factory reset validated");
-		}
-	} catch (err) {
-		alert("Send or receive Failed: " + err.message);
-		return;
-	}
-	console.log("Done sending keymap save command.");
+	console.log("[hid_send_factory_reset] Sending factory reset command...");
+	res = await hid_send_packet(cmdData);
+	if (!res) return;
+	console.log("[hid_send_factory_reset] Done sending keymap save command.");
 }
 
 async function get_firm_data() {
@@ -1030,6 +1023,7 @@ async function get_firm_data() {
 }
 
 function update_led_brightness() {
+	console.log("Updating brightness....");
 	hid_send_config(2);
 	clearInterval(led_picker_active[2]);
 	led_picker_active[2] = false;
@@ -1053,7 +1047,6 @@ document.getElementById('led-brightness').addEventListener('input', (e) => {
 	let value = val*8;
 	if (value > 255) value = 255;
 	mactra_config[2].value = value;
-	console.log(mactra_config[2].value);
 	
 	setBrightnessValue();
 });
@@ -1218,6 +1211,7 @@ document.getElementById('btn-load-default').addEventListener('click', async () =
 
 document.getElementById('led-mode-select').addEventListener('change', async (event) => {
 	// 1. Get the newly selected value
+	if (lock_config_updating) return;
 	const newValue = event.target.value;
 	console.log("LED Mode changed to:", newValue);
 	mactra_config[1].value = newValue;
@@ -1263,6 +1257,12 @@ document.getElementById('led-color-2').addEventListener('change', (event) => {
 	clearInterval(led_picker_active[1]);
 	led_picker_active[1] = 0;
 });
+
+document.getElementById('btn-open-wiki-description').addEventListener('click', (event) => {
+	window.open("https://github.com/random-eel/mactra-rx231/wiki/Consumer%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3");
+});
+
+
 
 // Initialize
 initUI();
