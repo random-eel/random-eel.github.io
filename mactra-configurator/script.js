@@ -232,7 +232,7 @@ const HID_CODES = {
 	// --- Media / Special (Check your specific Usage Page handling!) ---
 	// Note: If you use a separate "Consumer Page", these IDs will differ. 
 	// This assumes Standard HID Page 0x07 context.
-	0x65: { name: "Application (Menu)", sname: "MENU" },
+	0x65: { name: "Application (Menu key)", sname: "MENU" },
 	0x66: { name: "Power", sname: "PWR" },
 };
 
@@ -587,9 +587,9 @@ function openModal(keyIndex) {
 		consumerHex.value = null;
 	}
 	// Highlight the selected keycode in the grid (Visual polish)
-	document.querySelectorAll('.picker-key').forEach(el => el.style.border = "1px solid #555");
+	document.querySelectorAll('.picker-key').forEach(el => el.classList.remove('selected'));
 	const activeEl = document.getElementById(`picker-btn-${draftSelection.keydata}`);
-	if(activeEl) activeEl.style.border = "2px solid #007bff";
+	if(activeEl) activeEl.classList.add('selected');
 	
 	// Highlighting already selected keycode ------------------------------------------------------------------------
 	// 1. Remove highlight from all buttons
@@ -626,9 +626,9 @@ function selectDraftKey(code) {
 	updatePreview();
 
 	// Visual Highlight update
-	document.querySelectorAll('.picker-key').forEach(el => el.style.border = "1px solid #555");
-	const activeEl = document.getElementById(`picker-btn-${code}`);
-	if(activeEl) activeEl.style.border = "2px solid #007bff";
+	document.querySelectorAll('.picker-key').forEach(el => el.classList.remove('selected'));
+	const activeEl = document.getElementById(`picker-btn-${draftSelection.keydata}`);
+	if(activeEl) activeEl.classList.add('selected');
 }
 
 /* --- 3. TOGGLE FLAG (Inside Modal) --- */
